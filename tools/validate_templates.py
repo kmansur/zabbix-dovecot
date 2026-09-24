@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Static validation for the Dovecot Zabbix template exports."""
+"""Static and cross-version validation for Dovecot Zabbix template exports."""
 
 from __future__ import annotations
 
@@ -14,6 +14,11 @@ TEMPLATES = {
     "7.0": ROOT / "templates" / "7.0" / "dovecot-by-zabbix-agent.yaml",
     "8.0": ROOT / "templates" / "8.0" / "dovecot-by-zabbix-agent.yaml",
 }
+
+EXPECTED_TEMPLATE_UUID = "a46637264254413e838cc95b1cacb91d"
+EXPECTED_TEMPLATE_NAME = "Dovecot by Zabbix agent"
+EXPECTED_VENDOR = "Net Tech"
+EXPECTED_VERSION = "3.0.0"
 
 EXPECTED_KEYS = {
     "dovecot.stats",
@@ -50,7 +55,7 @@ def walk(node):
             yield from walk(value)
 
 
-def validate(path: Path, export_version: str) -> None:
+def load_template(path: Path, export_version: str) -> tuple[dict, dict, str]:
     text = path.read_text(encoding="utf-8")
     data = yaml.safe_load(text)
 
@@ -62,15 +67,23 @@ def validate(path: Path, export_version: str) -> None:
     assert len(templates) == 1, f"{path}: expected exactly one template"
     template = templates[0]
 
-    vendor = template.get("vendor", {})
-    assert str(vendor.get("version")) == "3.0.0", f"{path}: vendor version is not 3.0.0"
-    assert vendor.get("name") == "Net Tech", f"{path}: vendor name must be Net Tech"
-    assert template.get("template") == "Dovecot by Zabbix agent", (
+    assert template.get("uuid") == EXPECTED_TEMPLATE_UUID, (
+        f"{path}: template UUID changed unexpectedly"
+    )
+    assert template.get("template") == EXPECTED_TEMPLATE_NAME, (
         f"{path}: technical template name is not standardized"
     )
-    assert template.get("name") == "Dovecot by Zabbix agent", (
+    assert template.get("name") == EXPECTED_TEMPLATE_NAME, (
         f"{path}: visible template name is not standardized"
     )
+
+    vendor = template.get("vendor", {})
+    assert vendor.get("name") == EXPECTED_VENDOR, f"{path}: vendor name mismatch"
+    assert str(vendor.get("version")) == EXPECTED_VERSION, (
+        f"{path}: vendor version mismatch"
+    )
+
+    assert "Template App Dovecot" not in text, f"{path}: legacy template name remains"
 
     keys = {
         obj["key"]
@@ -104,11 +117,72 @@ def validate(path: Path, export_version: str) -> None:
         f"{path}: POP3 must use protocol-aware service check"
     )
 
+    return data, template, text
+
+
+def item_uuid_by_key(template: dict) -> dict[str, str]:
+    result = {}
+    for obj in walk(template):
+        if (
+            isinstance(obj, dict)
+            and isinstance(obj.get("key"), str)
+            and isinstance(obj.get("uuid"), str)
+        ):
+            result[obj["key"]] = obj["uuid"]
+    return result
+
+
+def macro_values(template: dict) -> dict[str, str]:
+    return {
+        macro["macro"]: str(macro.get("value", ""))
+        for macro in template.get("macros", [])
+        if isinstance(macro, dict) and isinstance(macro.get("macro"), str)
+    }
+
+
+def named_uuid_set(data: dict, object_name: str) -> set[tuple[str, str]]:
+    result = set()
+    for obj in walk(data):
+        if (
+            isinstance(obj, dict)
+            and isinstance(obj.get("uuid"), str)
+            and isinstance(obj.get("name"), str)
+        ):
+            result.add((obj["name"], obj["uuid"]))
+    return result
+
+
+def validate_cross_version(
+    data7: dict, template7: dict, data8: dict, template8: dict
+) -> None:
+    items7 = item_uuid_by_key(template7)
+    items8 = item_uuid_by_key(template8)
+    assert items7 == items8, "7.0/8.0 item key-to-UUID mapping differs"
+
+    macros7 = macro_values(template7)
+    macros8 = macro_values(template8)
+    assert macros7 == macros8, "7.0/8.0 macro names/default values differ"
+
+    named7 = named_uuid_set(data7, "name")
+    named8 = named_uuid_set(data8, "name")
+    only7 = sorted(named7 - named8)
+    only8 = sorted(named8 - named7)
+    assert not only7 and not only8, (
+        "7.0/8.0 named UUID objects differ: "
+        f"only7={only7[:10]} only8={only8[:10]}"
+    )
+
 
 def main() -> int:
+    loaded = {}
     for version, path in TEMPLATES.items():
-        validate(path, version)
+        loaded[version] = load_template(path, version)
         print(f"OK: {path.relative_to(ROOT)}")
+
+    data7, template7, _ = loaded["7.0"]
+    data8, template8, _ = loaded["8.0"]
+    validate_cross_version(data7, template7, data8, template8)
+    print("OK: Zabbix 7.0/8.0 semantic parity")
     return 0
 
 
