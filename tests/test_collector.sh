@@ -62,6 +62,11 @@ assert_contains "$RESULT" '"total":5' "total count"
 assert_contains "$RESULT" '"users":2' "unique user count"
 assert_contains "$RESULT" '"max_user_connections":4' "maximum connections per user"
 
+if printf '%s\n' "$RESULT" | grep -F '@example.com' >/dev/null; then
+    printf 'FAIL: collector JSON leaked a username\n' >&2
+    exit 1
+fi
+
 # 2. Empty output is valid and must not be reported as collector failure.
 RESULT="$(
     DOVECOT_DOVEADM="$FAKE_DOVEADM" \
@@ -120,3 +125,34 @@ COLLECTOR_VERSION="$(/bin/sh "$PROJECT_DIR/scripts/dovecot_stats.sh" collector-v
 }
 
 echo "OK: Dovecot collector tests passed"
+
+
+# 6. Repository security invariants.
+if grep -En '(^|[[:space:]])(eval|sh[[:space:]]+-c|bash[[:space:]]+-c)([[:space:]]|$)' "$PROJECT_DIR/scripts/dovecot_stats.sh"; then
+    printf 'FAIL: forbidden dynamic shell execution pattern found\n' >&2
+    exit 1
+fi
+
+if grep -Eq 'UserParameter=.*sudo' "$PROJECT_DIR/config/userparameter_dovecot.conf"; then
+    printf 'FAIL: UserParameter must not sudo the collector\n' >&2
+    exit 1
+fi
+
+if grep -Eq 'UserParameter=.*\[\*' "$PROJECT_DIR/config/userparameter_dovecot.conf"; then
+    printf 'FAIL: flexible UserParameter is not allowed\n' >&2
+    exit 1
+fi
+
+grep -Fxq 'zabbix ALL=(root) NOPASSWD: /usr/local/bin/doveadm who -1' \
+    "$PROJECT_DIR/config/sudoers.d/zabbix-dovecot.freebsd" || {
+        printf 'FAIL: FreeBSD sudoers rule is not exact\n' >&2
+        exit 1
+    }
+
+grep -Fxq 'zabbix ALL=(root) NOPASSWD: /usr/bin/doveadm who -1' \
+    "$PROJECT_DIR/config/sudoers.d/zabbix-dovecot.linux" || {
+        printf 'FAIL: Linux sudoers rule is not exact\n' >&2
+        exit 1
+    }
+
+echo "OK: repository security invariants passed"
