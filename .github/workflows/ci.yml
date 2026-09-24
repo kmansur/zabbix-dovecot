@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+      - name: Install development dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements-dev.txt
+      - name: Validate POSIX shell syntax
+        run: sh -n scripts/dovecot_stats.sh
+      - name: Run collector regression tests
+        run: sh tests/test_collector.sh
+      - name: Compile Python validators
+        run: python -m compileall -q tools
+      - name: Ruff lint
+        run: ruff check tools
+      - name: Validate Zabbix templates
+        run: python tools/validate_templates.py
+      - name: Validate bilingual documentation
+        run: python tools/validate_docs.py

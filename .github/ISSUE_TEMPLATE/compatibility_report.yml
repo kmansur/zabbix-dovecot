@@ -1,0 +1,30 @@
+name: Compatibility report
+description: Report validation on a Zabbix, Dovecot, FreeBSD, or Linux combination.
+title: "[Compatibility] "
+labels: ["compatibility"]
+body:
+  - type: input
+    id: zabbix
+    attributes:
+      label: Zabbix version/build
+    validations:
+      required: true
+  - type: input
+    id: dovecot
+    attributes:
+      label: Dovecot version
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and version
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Validation result
+      description: Include fresh import/upgrade, Latest data and relevant service-check results. Remove sensitive information.
+    validations:
+      required: true
