@@ -78,7 +78,7 @@ zabbix_export:
           tags:
             - tag: component
               value: collector
-        - uuid: 3bcd274f73fa36367efc8560dc449ae0
+        - uuid: a07ab9680cce4ecfb62ac4a81d810a11
           name: 'Dovecot collector version'
           key: dovecot.collector.version
           delay: 1h
@@ -217,7 +217,7 @@ zabbix_export:
               tags:
                 - tag: scope
                   value: capacity
-        - uuid: 7b303d2f07b6217f5c3e7f1fa5931bb8
+        - uuid: 13591b6d5239493d9eed5439000c888f
           name: 'Dovecot active users'
           type: DEPENDENT
           key: dovecot.connections.users
@@ -232,7 +232,7 @@ zabbix_export:
           tags:
             - tag: component
               value: connections
-        - uuid: 070ad5a681306bf98a9eb8ba9ecccd79
+        - uuid: fb6236f9486143a6a54efb9448516016
           name: 'Dovecot maximum connections per user'
           type: DEPENDENT
           key: dovecot.connections.max_per_user
