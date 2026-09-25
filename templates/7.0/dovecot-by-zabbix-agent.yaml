@@ -119,7 +119,7 @@ zabbix_export:
       tags:
       - tag: component
         value: collector
-    - uuid: 3bcd274f73fa36367efc8560dc449ae0
+    - uuid: a07ab9680cce4ecfb62ac4a81d810a11
       name: Dovecot collector version
       type: ZABBIX_PASSIVE
       key: dovecot.collector.version
@@ -167,8 +167,7 @@ zabbix_export:
         - tag: protocol
           value: imap
       - uuid: 2aea299ce2e54a1a9f692036747e0fca
-        expression: avg(/Dovecot by Zabbix agent/dovecot.connections.imap,5m)>{$DOVECOT.IMAP.CONN.WARN} and avg(/Template App
-          Dovecot/dovecot.connections.imap,5m)<={$DOVECOT.IMAP.CONN.HIGH}
+        expression: avg(/Dovecot by Zabbix agent/dovecot.connections.imap,5m)>{$DOVECOT.IMAP.CONN.WARN} and avg(/Dovecot by Zabbix agent/dovecot.connections.imap,5m)<={$DOVECOT.IMAP.CONN.HIGH}
         recovery_mode: RECOVERY_EXPRESSION
         recovery_expression: avg(/Dovecot by Zabbix agent/dovecot.connections.imap,5m)<{$DOVECOT.IMAP.CONN.WARN.RECOVERY} or
           avg(/Dovecot by Zabbix agent/dovecot.connections.imap,5m)>{$DOVECOT.IMAP.CONN.HIGH}
@@ -214,8 +213,7 @@ zabbix_export:
         - tag: protocol
           value: pop3
       - uuid: 316216958694403e9e037312b8178fe0
-        expression: avg(/Dovecot by Zabbix agent/dovecot.connections.pop3,5m)>{$DOVECOT.POP3.CONN.WARN} and avg(/Template App
-          Dovecot/dovecot.connections.pop3,5m)<={$DOVECOT.POP3.CONN.HIGH}
+        expression: avg(/Dovecot by Zabbix agent/dovecot.connections.pop3,5m)>{$DOVECOT.POP3.CONN.WARN} and avg(/Dovecot by Zabbix agent/dovecot.connections.pop3,5m)<={$DOVECOT.POP3.CONN.HIGH}
         recovery_mode: RECOVERY_EXPRESSION
         recovery_expression: avg(/Dovecot by Zabbix agent/dovecot.connections.pop3,5m)<{$DOVECOT.POP3.CONN.WARN.RECOVERY} or
           avg(/Dovecot by Zabbix agent/dovecot.connections.pop3,5m)>{$DOVECOT.POP3.CONN.HIGH}
@@ -257,8 +255,7 @@ zabbix_export:
         - tag: scope
           value: capacity
       - uuid: 2367c1a7a19c468f863112346532a4f8
-        expression: avg(/Dovecot by Zabbix agent/dovecot.connections.total,5m)>{$DOVECOT.TOTAL.CONN.WARN} and avg(/Template App
-          Dovecot/dovecot.connections.total,5m)<={$DOVECOT.TOTAL.CONN.HIGH}
+        expression: avg(/Dovecot by Zabbix agent/dovecot.connections.total,5m)>{$DOVECOT.TOTAL.CONN.WARN} and avg(/Dovecot by Zabbix agent/dovecot.connections.total,5m)<={$DOVECOT.TOTAL.CONN.HIGH}
         recovery_mode: RECOVERY_EXPRESSION
         recovery_expression: avg(/Dovecot by Zabbix agent/dovecot.connections.total,5m)<{$DOVECOT.TOTAL.CONN.WARN.RECOVERY} or
           avg(/Dovecot by Zabbix agent/dovecot.connections.total,5m)>{$DOVECOT.TOTAL.CONN.HIGH}
@@ -269,7 +266,7 @@ zabbix_export:
         tags:
         - tag: scope
           value: capacity
-    - uuid: 7b303d2f07b6217f5c3e7f1fa5931bb8
+    - uuid: 13591b6d5239493d9eed5439000c888f
       name: Dovecot active users
       type: DEPENDENT
       key: dovecot.connections.users
@@ -285,7 +282,7 @@ zabbix_export:
       tags:
       - tag: component
         value: connections
-    - uuid: 070ad5a681306bf98a9eb8ba9ecccd79
+    - uuid: fb6236f9486143a6a54efb9448516016
       name: Dovecot maximum connections per user
       type: DEPENDENT
       key: dovecot.connections.max_per_user
