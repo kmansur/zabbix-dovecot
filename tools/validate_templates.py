@@ -19,6 +19,7 @@ EXPECTED_TEMPLATE_UUID = "a46637264254413e838cc95b1cacb91d"
 EXPECTED_TEMPLATE_NAME = "Dovecot by Zabbix agent"
 EXPECTED_VENDOR = "Net Tech"
 EXPECTED_VERSION = "3.0.0"
+UUIDV4_RE = re.compile(r"^[0-9a-f]{12}4[0-9a-f]{3}[89ab][0-9a-f]{15}$")
 
 EXPECTED_KEYS = {
     "dovecot.stats",
@@ -83,7 +84,7 @@ def load_template(path: Path, export_version: str) -> tuple[dict, dict, str]:
         f"{path}: vendor version mismatch"
     )
 
-    assert "Template App Dovecot" not in text, f"{path}: legacy template name remains"
+    assert not re.search(r"Template App\\s+Dovecot", text), (\n        f"{path}: legacy template name remains"\n    )
 
     keys = {
         obj["key"]
@@ -100,6 +101,9 @@ def load_template(path: Path, export_version: str) -> tuple[dict, dict, str]:
     ]
     duplicates = sorted({uuid for uuid in uuids if uuids.count(uuid) > 1})
     assert not duplicates, f"{path}: duplicate UUIDs: {duplicates}"
+
+    invalid_uuidv4 = sorted(uuid for uuid in uuids if not UUIDV4_RE.fullmatch(uuid))
+    assert not invalid_uuidv4, f"{path}: invalid UUIDv4 values: {invalid_uuidv4}"
 
     defined_macros = {
         macro["macro"]
